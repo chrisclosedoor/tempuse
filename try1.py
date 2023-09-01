@@ -4,9 +4,11 @@ import torch
 
 model_name = "/data/user-data/haitian.fan/Llama-2-7b-hf"
 model = LlamaForCausalLM.from_pretrained(model_name,
-                                        load_in_8bit = False,
-                                        torch_dtype = torch.float16,device_map='cpu',
-                                        low_cpu_mem_usage = True)
+                                        load_in_8bit=False,
+                                        torch_dtype=torch.float16,
+                                        low_cpu_mem_usage=True)
+model = DataParallel(model) 
+model.to('cuda') 
 tokenizer = LlamaTokenizer.from_pretrained(model_name)
 
 
@@ -54,7 +56,8 @@ for file_name in os.listdir(folder_path):
         full_input = prefix + content + suffix
         
         
-        input_ids = tokenizer.encode(full_input, return_tensors="pt")
+        input_ids = tokenizer.encode(full_input, return_tensors="pt").to('cuda')
+
         output_ids = model.generate(input_ids,temperature = 0.1,top_k=30,top_p=0.95)
         output_text = tokenizer.decode(output_ids[0], skip_special_tokens=True)
         
